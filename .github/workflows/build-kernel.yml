@@ -10,7 +10,7 @@ jobs:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
-          repository: https://github.com/chunghoadinh1910-oss/android_kernel_samsung_exynos9820 # Thay bằng repo đã fork của bạn
+          repository: chunghoadinh1910-oss/android_kernel_samsung_exynos9820 # Thay bằng repo đã fork của bạn
           path: kernel-source
 
       - name: Integrate SukiSU Ultra (Non-GKI)
