@@ -1,0 +1,48 @@
+name: Build FreeRunner Kernel with SukiSU Ultra
+
+on:
+  workflow_dispatch: # Cho phép bạn kích hoạt build thủ công từ tab Actions
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Kernel Source
+        uses: actions/checkout@v4
+        with:
+          repository: TEN_CUA_BAN/android_kernel_samsung_exynos9820 # Thay bằng repo đã fork của bạn
+          path: kernel-source
+
+      - name: Integrate SukiSU Ultra (Non-GKI)
+        run: |
+          cd kernel-source
+          # Sử dụng nhánh 'nongki' hoặc 'main' tùy theo hướng dẫn chính thức
+          curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s main
+          # Hoặc thử với nhánh nongki nếu bản main gặp lỗi:
+          # curl -LSs "https://raw.githubusercontent.com/SukiSU-Ultra/SukiSU-Ultra/main/kernel/setup.sh" | bash -s nongki
+
+      - name: Setup Build Environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc bison flex libssl-dev libelf-dev python3 git zip
+
+      - name: Build Kernel
+        run: |
+          cd kernel-source
+          # Đảm bảo defconfig có các tùy chọn cần thiết cho SukiSU trên non-GKI
+          # Ví dụ: sed -i 's/# CONFIG_KALLSYMS_ALL is not set/CONFIG_KALLSYMS_ALL=y/' arch/arm64/configs/exynos9820_defconfig
+          # make ARCH=arm64 exynos9820_defconfig
+          # make ARCH=arm64 -j$(nproc)
+
+      - name: Package with AnyKernel3
+        run: |
+          # Clone AnyKernel3 và đóng gói kernel image (zImage/Image.gz-dtb) cùng dtb
+          git clone https://github.com/osm0sis/AnyKernel3.git anykernel
+          # copy kernel image vào anykernel
+          # cd anykernel && zip -r9 ../FreeRunner-SukiSU-$(date +%Y%m%d).zip *
+
+      - name: Upload Kernel Zip
+        uses: actions/upload-artifact@v4
+        with:
+          name: FreeRunner-SukiSU-Kernel
+          path: FreeRunner-SukiSU-*.zip
